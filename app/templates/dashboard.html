@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% from "components/checklist_fields.html" import checklist_inputs, tempering_inputs, service_type_select %}
+{% block title %}Dashboard · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Add new inspection records and manage recently added entries.</p>
+  </div>
+  <div class="stat-pill">{{ total_jobs }} total record{{ 's' if total_jobs != 1 else '' }}</div>
+</div>
+
+<div class="grid-2{{ '' if user.role != 'viewer' else ' grid-2--single' }}">
+  <!-- Add Record Form -->
+  {% if user.role != 'viewer' %}
+  <div class="card">
+    <div class="card-title">➕ Add New Record</div>
+    <form method="post" action="/dashboard/jobs/create">
+
+      <div class="field-row">
+        <div class="field">
+          <label for="vehicle_no">Vehicle No.</label>
+          <input type="text" id="vehicle_no" name="vehicle_no" placeholder="e.g. JV-7219" required>
+        </div>
+        <div class="field">
+          <label for="device_id">Device ID</label>
+          <input type="text" id="device_id" name="device_id" placeholder="e.g. DEV12345">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="company_name">Company Name</label>
+          <select id="company_name" name="company_name">
+            <option value="">Select company</option>
+            {% for c in company_names %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="job_date">Date</label>
+          <input type="date" id="job_date" name="job_date" value="{{ today }}" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" placeholder="e.g. Lahore" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="before_images">Before Images (link)</label>
+          <input type="text" id="before_images" name="before_images" placeholder="Paste OneDrive folder/file link">
+        </div>
+        <div class="field">
+          <label for="after_images">After Images (link)</label>
+          <input type="text" id="after_images" name="after_images" placeholder="Paste OneDrive folder/file link">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="service_form">Service Form (link)</label>
+          <input type="text" id="service_form" name="service_form" placeholder="Paste OneDrive folder link">
+        </div>
+        <div class="field">
+          <label for="po_number">PO Number</label>
+          <input type="text" id="po_number" name="po_number" placeholder="e.g. PO-10234">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="device_type">Device type</label>
+          <select id="device_type" name="device_type">
+            <option value="">Select device type</option>
+            {% for d in device_types %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {{ service_type_select(service_type_top_options, service_type_sub_options, 'new') }}
+
+      <div class="field">
+        <label>Tempering</label>
+        {{ tempering_inputs(tempering_options, [], 'new') }}
+      </div>
+
+      <div class="field">
+        <label for="tempering_evidence">Tempering Evidence (link of folder)</label>
+        <input type="text" id="tempering_evidence" name="tempering_evidence" placeholder="Paste OneDrive folder link">
+      </div>
+
+      <div class="field">
+        <label>Service checklist</label>
+        {{ checklist_inputs(checklist_fields) }}
+      </div>
+
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Write note here"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Add Record</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Recent Records -->
+  <div class="card">
+    <div class="card-title">🕓 Recent Records</div>
+
+    <form method="get" action="/dashboard" style="margin-bottom:16px;">
+      <input type="search" name="q" value="{{ q }}" placeholder="Quick search by vehicle no., device ID or location...">
+    </form>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sr.</th>
+            <th>Date</th>
+            <th>Vehicle No.</th>
+            <th>Device ID</th>
+            <th>Company Name</th>
+            <th>Location</th>
+            <th>Device type</th>
+            <th>Service Type</th>
+            <th>Checklist</th>
+            <th>Before Images</th>
+            <th>After Images</th>
+            <th>Service Form</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ job.job_date.strftime('%d %b %Y') }}</td>
+            <td class="mono">{{ job.vehicle_no }}</td>
+            <td>{{ job.device_id or '—' }}</td>
+            <td>{{ job.company_name or '—' }}</td>
+            <td>{{ job.location }}</td>
+            <td>{{ job.device_type or '—' }}</td>
+            <td>{{ job.service_type or '—' }}</td>
+            <td><span class="badge badge-active">{{ job.checklist_done_count }}/{{ checklist_fields|length }}</span></td>
+            <td>{{ job.before_images | evidence_link | safe if job.before_images else '—' }}</td>
+            <td>{{ job.after_images | evidence_link | safe if job.after_images else '—' }}</td>
+            <td>{{ job.service_form | evidence_link | safe if job.service_form else '—' }}</td>
+            <td class="actions-cell">
+              <button class="btn btn-outline btn-sm" onclick="openModal('view-{{ job.id }}')">View</button>
+              {% if user.role != 'viewer' %}
+              <button class="btn btn-outline btn-sm" onclick="openModal('edit-{{ job.id }}')">Edit</button>
+              {% endif %}
+              {% if user.is_admin_level %}
+              <form method="post" action="/dashboard/jobs/{{ job.id }}/delete" onsubmit="return confirmDelete('Delete record for vehicle {{ job.vehicle_no }}? This cannot be undone.')" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+
+          <!-- View Modal (read-only) -->
+          <div class="modal-backdrop" id="view-{{ job.id }}">
+            <div class="modal-box">
+              <span class="modal-close" onclick="closeModal('view-{{ job.id }}')">&times;</span>
+              <h3>Record — {{ job.vehicle_no }}</h3>
+              <div class="detail-grid">
+                <div><span class="detail-label">Vehicle No.</span><span>{{ job.vehicle_no }}</span></div>
+                <div><span class="detail-label">Device ID</span><span>{{ job.device_id or '—' }}</span></div>
+                <div><span class="detail-label">Company Name</span><span>{{ job.company_name or '—' }}</span></div>
+                <div><span class="detail-label">Date</span><span>{{ job.job_date.strftime('%d %b %Y') }}</span></div>
+                <div><span class="detail-label">Location</span><span>{{ job.location }}</span></div>
+                <div><span class="detail-label">Before Images</span><span>{{ job.before_images | evidence_link | safe if job.before_images else '—' }}</span></div>
+                <div><span class="detail-label">After Images</span><span>{{ job.after_images | evidence_link | safe if job.after_images else '—' }}</span></div>
+                <div><span class="detail-label">Service Form</span><span>{{ job.service_form | evidence_link | safe if job.service_form else '—' }}</span></div>
+                <div><span class="detail-label">PO Number</span><span>{{ job.po_number or '—' }}</span></div>
+                <div><span class="detail-label">Device type</span><span>{{ job.device_type or '—' }}</span></div>
+                <div><span class="detail-label">Service Type</span><span>{{ job.service_type or '—' }}</span></div>
+                <div><span class="detail-label">Tempering</span><span>{{ job.tempering or '-' }}</span></div>
+                <div><span class="detail-label">Tempering Evidence</span><span>{{ job.tempering_evidence | evidence_link | safe if job.tempering_evidence else '—' }}</span></div>
+              </div>
+              <div class="field" style="margin-top:14px;">
+                <label>Service Checklist</label>
+                <div class="checklist-grid checklist-readonly">
+                  {% for name, label in checklist_fields %}
+                  <div class="checklist-item">
+                    <span>{{ '☑' if job|attr(name) else '☐' }}</span>
+                    <span>{{ label }}</span>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if job.notes %}
+              <div class="field" style="margin-top:14px;">
+                <label>Notes</label>
+                <p style="margin:0; color:var(--text-muted); font-size:14px;">{{ job.notes }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Edit Modal -->
+          <div class="modal-backdrop" id="edit-{{ job.id }}">
+            <div class="modal-box">
+              <span class="modal-close" onclick="closeModal('edit-{{ job.id }}')">&times;</span>
+              <h3>Edit Record — {{ job.vehicle_no }}</h3>
+              <form method="post" action="/dashboard/jobs/{{ job.id }}/update">
+                <div class="field-row">
+                  <div class="field">
+                    <label>Vehicle No.</label>
+                    <input type="text" name="vehicle_no" value="{{ job.vehicle_no }}" required>
+                  </div>
+                  <div class="field">
+                    <label>Device ID</label>
+                    <input type="text" name="device_id" value="{{ job.device_id or '' }}">
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label>Company Name</label>
+                    <select name="company_name">
+                      <option value="">Select company</option>
+                      {% for c in company_names %}
+                      <option value="{{ c }}" {{ 'selected' if c == job.company_name else '' }}>{{ c }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Date</label>
+                    <input type="date" name="job_date" value="{{ job.job_date.strftime('%Y-%m-%d') }}" required>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Location</label>
+                  <input type="text" name="location" value="{{ job.location }}" required>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label>Before Images (link)</label>
+                    <input type="text" name="before_images" value="{{ job.before_images or '' }}">
+                  </div>
+                  <div class="field">
+                    <label>After Images (link)</label>
+                    <input type="text" name="after_images" value="{{ job.after_images or '' }}">
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label>Service Form (link)</label>
+                    <input type="text" name="service_form" value="{{ job.service_form or '' }}">
+                  </div>
+                  <div class="field">
+                    <label>PO Number</label>
+                    <input type="text" name="po_number" value="{{ job.po_number or '' }}">
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label>Device type</label>
+                    <select name="device_type">
+                      <option value="">Select device type</option>
+                      {% for d in device_types %}
+                      <option value="{{ d }}" {{ 'selected' if d == job.device_type else '' }}>{{ d }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                {% set st_parts = job.service_type.split(' - ') if job.service_type else [] %}
+                {{ service_type_select(service_type_top_options, service_type_sub_options, 'edit' ~ job.id, st_parts[0] if st_parts else '', st_parts[1] if st_parts|length > 1 else '') }}
+                <div class="field">
+                  <label>Tempering</label>
+                  {{ tempering_inputs(tempering_options, job.tempering | split_comma, 'edit' ~ job.id) }}
+                </div>
+                <div class="field">
+                  <label>Tempering Evidence (link of folder)</label>
+                  <input type="text" name="tempering_evidence" value="{{ job.tempering_evidence or '' }}">
+                </div>
+                <div class="field">
+                  <label>Service checklist</label>
+                  {{ checklist_inputs(checklist_fields, job) }}
+                </div>
+                <div class="field">
+                  <label>Notes</label>
+                  <textarea name="notes" rows="3">{{ job.notes or '' }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <tr><td colspan="13">
+            <div class="empty-state">
+              <div class="icon">📋</div>
+              No records found{{ ' for "' + q + '"' if q else '' }}.
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if jobs %}
+    <div style="margin-top:14px;">
+      <a href="/search" class="btn btn-outline btn-sm">Go to Advanced Search →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

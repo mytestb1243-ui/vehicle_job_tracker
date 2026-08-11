@@ -1,0 +1,44 @@
+{% macro checklist_inputs(checklist_fields, job=None, uid='') %}
+<div class="checklist-grid">
+  {% for name, label in checklist_fields %}
+  <label class="checklist-item">
+    <input type="checkbox" name="{{ name }}" {{ 'checked' if job and job|attr(name) else '' }}>
+    <span>{{ label }}</span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro tempering_inputs(tempering_options, selected=[], uid='') %}
+<div class="checklist-grid tempering-grid">
+  {% for opt in tempering_options %}
+  <label class="checklist-item">
+    <input type="checkbox" name="tempering" value="{{ opt }}" {{ 'checked' if opt in selected else '' }}>
+    <span>{{ opt }}</span>
+  </label>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro service_type_select(top_options, sub_options, uid, selected_top='', selected_sub='') %}
+<div class="field-row service-type-row">
+  <div class="field">
+    <label for="service_type_top_{{ uid }}">Service Type</label>
+    <select id="service_type_top_{{ uid }}" name="service_type_top" onchange="toggleInspectionSub('{{ uid }}')">
+      <option value="">Select service type</option>
+      {% for opt in top_options %}
+      <option value="{{ opt }}" {{ 'selected' if opt == selected_top else '' }}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field" id="inspection_sub_wrap_{{ uid }}" style="{{ '' if selected_top == 'Inspection' else 'display:none;' }}">
+    <label for="service_type_sub_{{ uid }}">Inspection Type</label>
+    <select id="service_type_sub_{{ uid }}" name="service_type_sub">
+      <option value="">Select inspection type</option>
+      {% for sub in sub_options %}
+      <option value="{{ sub }}" {{ 'selected' if sub == selected_sub else '' }}>{{ sub }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+{% endmacro %}

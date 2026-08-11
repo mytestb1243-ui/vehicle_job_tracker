@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Admin Panel</h1>
+    <p>Manage user accounts, roles and access.</p>
+  </div>
+  <div class="stat-pill">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</div>
+</div>
+
+<div class="grid-2">
+  <!-- Add user -->
+  <div class="card">
+    <div class="card-title">➕ Add New User</div>
+    <form method="post" action="/admin/users/create">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" name="full_name" placeholder="e.g. Jane Smith">
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="e.g. jsmith" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Temporary password" required>
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <select name="role">
+          {% for r in roles %}
+          {% if r != 'super_admin' or user.is_super_admin %}
+          <option value="{{ r }}" {{ 'selected' if r == 'user' else '' }}>{{ r | role_label }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create User</button>
+    </form>
+  </div>
+
+  <!-- Users list -->
+  <div class="card">
+    <div class="card-title">👥 All Users</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td class="mono">{{ u.username }}</td>
+            <td>{{ u.full_name or '—' }}</td>
+            <td><span class="badge badge-role-{{ u.role }}">{{ u.role | role_label }}</span></td>
+            <td>
+              {% if u.is_active %}
+              <span class="badge badge-active">Active</span>
+              {% else %}
+              <span class="badge badge-inactive">Disabled</span>
+              {% endif %}
+            </td>
+            <td class="actions-cell">
+              <button class="btn btn-outline btn-sm" onclick="openModal('edit-user-{{ u.id }}')">Edit</button>
+              <button class="btn btn-outline btn-sm" onclick="openModal('reset-user-{{ u.id }}')">Reset PW</button>
+              {% if u.id != user.id and (u.role != 'super_admin' or user.is_super_admin) %}
+              <form method="post" action="/admin/users/{{ u.id }}/delete" onsubmit="return confirmDelete('Delete user {{ u.username }}? This cannot be undone.')" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+
+          <!-- Edit user modal -->
+          <div class="modal-backdrop" id="edit-user-{{ u.id }}">
+            <div class="modal-box">
+              <span class="modal-close" onclick="closeModal('edit-user-{{ u.id }}')">&times;</span>
+              <h3>Edit User — {{ u.username }}</h3>
+              <form method="post" action="/admin/users/{{ u.id }}/update">
+                <div class="field">
+                  <label>Full Name</label>
+                  <input type="text" name="full_name" value="{{ u.full_name or '' }}">
+                </div>
+                <div class="field">
+                  <label>Role</label>
+                  <select name="role" {{ 'disabled' if u.role == 'super_admin' and not user.is_super_admin else '' }}>
+                    {% for r in roles %}
+                    {% if r != 'super_admin' or user.is_super_admin %}
+                    <option value="{{ r }}" {{ 'selected' if r == u.role else '' }}>{{ r | role_label }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="checkbox-row field">
+                  <input type="checkbox" id="active-{{ u.id }}" name="is_active" {{ 'checked' if u.is_active else '' }}>
+                  <label for="active-{{ u.id }}">Account is active</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Reset password modal -->
+          <div class="modal-backdrop" id="reset-user-{{ u.id }}">
+            <div class="modal-box">
+              <span class="modal-close" onclick="closeModal('reset-user-{{ u.id }}')">&times;</span>
+              <h3>Reset Password — {{ u.username }}</h3>
+              <form method="post" action="/admin/users/{{ u.id }}/reset-password">
+                <div class="field">
+                  <label>New Password</label>
+                  <input type="password" name="new_password" placeholder="Enter new password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <tr><td colspan="5">
+            <div class="empty-state">
+              <div class="icon">👤</div>
+              No users yet.
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

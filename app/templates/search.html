@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Search Records · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Search Records</h1>
+    <p>Filter, browse and export inspection records.</p>
+  </div>
+  <div class="stat-pill">{{ total_results }} result{{ 's' if total_results != 1 else '' }}</div>
+</div>
+
+<div class="card">
+  <div class="card-title">🔍 Filters</div>
+  <form method="get" action="/search">
+    <div class="filter-bar">
+      <div class="field" style="margin-bottom:0;">
+        <label>Vehicle / Device no</label>
+        <input type="text" name="vehicle_or_device" value="{{ f_vehicle_or_device }}" placeholder="e.g. JV-7219">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Company Name</label>
+        <select name="company_name">
+          <option value="">All Companies</option>
+          {% for c in company_names %}
+          <option value="{{ c }}" {{ 'selected' if c == f_company_name else '' }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Location</label>
+        <input type="text" name="location" value="{{ f_location }}" placeholder="Lahore">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Device Type</label>
+        <select name="device_type">
+          <option value="">All Types</option>
+          {% for d in device_types %}
+          <option value="{{ d }}" {{ 'selected' if d == f_device_type else '' }}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>From Date</label>
+        <input type="date" name="date_from" value="{{ f_date_from }}">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>To Date</label>
+        <input type="date" name="date_to" value="{{ f_date_to }}">
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Service Type</label>
+        <select name="service_type">
+          <option value="">All Service Types</option>
+          {% for s in service_types %}
+          <option value="{{ s }}" {{ 'selected' if s == f_service_type else '' }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <button type="submit" class="btn btn-primary btn-block">Apply</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <a href="/search" class="btn btn-outline btn-sm">Clear Filters</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <div class="page-size-select">
+      <span>Rows per page:</span>
+      <select onchange="location.href='/search?{{ filters_qs }}&page_size='+this.value+'&page=1'">
+        {% for size in page_sizes %}
+        <option value="{{ size }}" {{ 'selected' if size == page_size else '' }}>{{ size }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <a class="btn btn-success btn-sm" href="/search/export?{{ filters_qs }}">⬇ Export to Excel</a>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sr.</th>
+          <th>Vehicle No.</th>
+          <th>Device ID</th>
+          <th>Company Name</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Before Images</th>
+          <th>After Images</th>
+          <th>Service Form</th>
+          <th>PO Number</th>
+          <th>Device type</th>
+          <th>Service Type</th>
+          <th>Tempering</th>
+          <th>Tempering Evidence</th>
+          <th>Service checklist</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>{{ (page - 1) * page_size + loop.index }}</td>
+          <td class="mono">{{ job.vehicle_no }}</td>
+          <td>{{ job.device_id or '—' }}</td>
+          <td>{{ job.company_name or '—' }}</td>
+          <td>{{ job.job_date.strftime('%d %b %Y') }}</td>
+          <td>{{ job.location }}</td>
+          <td>{{ job.before_images | evidence_link | safe if job.before_images else '—' }}</td>
+          <td>{{ job.after_images | evidence_link | safe if job.after_images else '—' }}</td>
+          <td>{{ job.service_form | evidence_link | safe if job.service_form else '—' }}</td>
+          <td>{{ job.po_number or '—' }}</td>
+          <td>{{ job.device_type or '—' }}</td>
+          <td>{{ job.service_type or '—' }}</td>
+          <td>{{ job.tempering or '-' }}</td>
+          <td>{{ job.tempering_evidence | evidence_link | safe if job.tempering_evidence else '—' }}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="openModal('view-{{ job.id }}')">
+              {{ job.checklist_done_count }}/{{ checklist_fields|length }} ✓
+            </button>
+          </td>
+          <td>{{ (job.notes[:40] + '…') if job.notes and job.notes|length > 40 else (job.notes or '—') }}</td>
+        </tr>
+
+        <div class="modal-backdrop" id="view-{{ job.id }}">
+          <div class="modal-box">
+            <span class="modal-close" onclick="closeModal('view-{{ job.id }}')">&times;</span>
+            <h3>Checklist — {{ job.vehicle_no }}</h3>
+            <div class="checklist-grid checklist-readonly">
+              {% for name, label in checklist_fields %}
+              <div class="checklist-item">
+                <span>{{ '☑' if job|attr(name) else '☐' }}</span>
+                <span>{{ label }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% if job.notes %}
+            <div class="field" style="margin-top:14px;">
+              <label>Notes</label>
+              <p style="margin:0; color:var(--text-muted); font-size:14px;">{{ job.notes }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <tr><td colspan="16">
+          <div class="empty-state">
+            <div class="icon">🔍</div>
+            No records match your filters.
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination" style="margin-top:18px;">
+    {% if page > 1 %}
+      <a href="/search?{{ filters_qs }}&page_size={{ page_size }}&page={{ page - 1 }}">‹ Prev</a>
+    {% else %}
+      <span class="disabled">‹ Prev</span>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <span class="active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+        <a href="/search?{{ filters_qs }}&page_size={{ page_size }}&page={{ p }}">{{ p }}</a>
+      {% elif p == page - 3 or p == page + 3 %}
+        <span>…</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+      <a href="/search?{{ filters_qs }}&page_size={{ page_size }}&page={{ page + 1 }}">Next ›</a>
+    {% else %}
+      <span class="disabled">Next ›</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

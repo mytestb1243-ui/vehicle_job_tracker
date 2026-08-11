@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  {% if user %}
+    {% include "components/navbar.html" %}
+  {% endif %}
+
+  <div class="page-wrap">
+    {% if messages %}
+      <div class="flash-stack">
+        {% for m in messages %}
+          <div class="flash flash-{{ m.category }}">
+            {% if m.category == 'success' %}✅{% elif m.category == 'error' %}⚠️{% else %}ℹ️{% endif %}
+            {{ m.message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
