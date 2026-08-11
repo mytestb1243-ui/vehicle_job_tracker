@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -10,6 +11,9 @@ from app.dependencies import get_current_user, flash, get_flashed_messages
 from app.render import templates
 
 router = APIRouter()
+
+USERNAME_MAX_LEN = 80
+FULL_NAME_MAX_LEN = 150
 
 
 def _require_admin(request: Request, db: Session):
@@ -68,8 +72,21 @@ def create_user(
         return RedirectResponse("/admin", status_code=303)
 
     username_clean = username.strip().lower()
+    full_name_clean = full_name.strip()
     if not username_clean or not password:
         flash(request, "Username and password are required.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if len(username_clean) > USERNAME_MAX_LEN:
+        flash(request, f"Username is too long (max {USERNAME_MAX_LEN} characters).", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if len(full_name_clean) > FULL_NAME_MAX_LEN:
+        flash(request, f"Full name is too long (max {FULL_NAME_MAX_LEN} characters).", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if len(password) < 6:
+        flash(request, "Password must be at least 6 characters.", "error")
         return RedirectResponse("/admin", status_code=303)
 
     if role not in ALL_ROLES:
@@ -82,13 +99,18 @@ def create_user(
 
     new_user = User(
         username=username_clean,
-        full_name=full_name.strip(),
+        full_name=full_name_clean,
         password_hash=hash_password(password),
         role=role,
         is_active=True,
     )
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not create the user due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
     flash(request, f"User '{username_clean}' created successfully.", "success")
     return RedirectResponse("/admin", status_code=303)
 
@@ -132,10 +154,20 @@ def update_user(
         flash(request, "You cannot remove the last active administrator.", "error")
         return RedirectResponse("/admin", status_code=303)
 
-    target.full_name = full_name.strip()
+    full_name_clean = full_name.strip()
+    if len(full_name_clean) > FULL_NAME_MAX_LEN:
+        flash(request, f"Full name is too long (max {FULL_NAME_MAX_LEN} characters).", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    target.full_name = full_name_clean
     target.role = role
     target.is_active = is_active == "on"
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not update the user due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
     flash(request, f"User '{target.username}' updated successfully.", "success")
     return RedirectResponse("/admin", status_code=303)
 
@@ -160,12 +192,17 @@ def reset_password(
         flash(request, "Only a Super Admin can reset another Super Admin's password.", "error")
         return RedirectResponse("/admin", status_code=303)
 
-    if not new_password or len(new_password) < 4:
-        flash(request, "Password must be at least 4 characters.", "error")
+    if not new_password or len(new_password) < 6:
+        flash(request, "Password must be at least 6 characters.", "error")
         return RedirectResponse("/admin", status_code=303)
 
     target.password_hash = hash_password(new_password)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not reset the password due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
     flash(request, f"Password reset for '{target.username}'.", "success")
     return RedirectResponse("/admin", status_code=303)
 
@@ -196,6 +233,11 @@ def delete_user(request: Request, user_id: int, db: Session = Depends(get_db)):
 
     username = target.username
     db.delete(target)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not delete the user due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
     flash(request, f"User '{username}' deleted.", "success")
     return RedirectResponse("/admin", status_code=303)

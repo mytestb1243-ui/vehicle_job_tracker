@@ -3,6 +3,7 @@ import datetime
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -20,6 +21,29 @@ from app.dependencies import get_current_user, flash, get_flashed_messages
 from app.render import templates
 
 router = APIRouter()
+
+# Must match the VARCHAR limits on the Job model / DB schema exactly, so a
+# too-long value is rejected here with a clear message instead of crashing
+# the request when the database rejects the INSERT/UPDATE.
+FIELD_MAX_LENGTHS = {
+    "vehicle_no": ("Vehicle No.", 60),
+    "device_id": ("Device ID", 60),
+    "company_name": ("Company Name", 120),
+    "location": ("Location", 200),
+    "po_number": ("PO Number", 120),
+    "device_type": ("Device type", 60),
+    "service_type": ("Service Type", 60),
+    "tempering": ("Tempering", 300),
+}
+
+
+def _validate_lengths(values: dict) -> str | None:
+    """Return an error message for the first field that's too long, else None."""
+    for field, (label, max_len) in FIELD_MAX_LENGTHS.items():
+        value = values.get(field)
+        if value and len(value) > max_len:
+            return f"{label} is too long (max {max_len} characters)."
+    return None
 
 
 def _parse_date(value: str) -> datetime.date:
@@ -123,26 +147,39 @@ async def create_job(request: Request, db: Session = Depends(get_db)):
         flash(request, "Invalid date supplied.", "error")
         return RedirectResponse("/dashboard", status_code=303)
 
+    field_values = {
+        "vehicle_no": vehicle_no.upper(),
+        "device_id": (form.get("device_id") or "").strip() or None,
+        "company_name": (form.get("company_name") or "").strip() or None,
+        "location": location,
+        "po_number": (form.get("po_number") or "").strip() or None,
+        "device_type": (form.get("device_type") or "").strip() or None,
+        "service_type": _service_type_value(form) or None,
+        "tempering": _tempering_value(form) or None,
+    }
+    length_error = _validate_lengths(field_values)
+    if length_error:
+        flash(request, length_error, "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
     job = Job(
-        vehicle_no=vehicle_no.upper(),
-        device_id=(form.get("device_id") or "").strip() or None,
-        company_name=(form.get("company_name") or "").strip() or None,
+        **field_values,
         job_date=parsed_date,
-        location=location,
         before_images=(form.get("before_images") or "").strip() or None,
         after_images=(form.get("after_images") or "").strip() or None,
         service_form=(form.get("service_form") or "").strip() or None,
-        po_number=(form.get("po_number") or "").strip() or None,
-        device_type=(form.get("device_type") or "").strip() or None,
-        service_type=_service_type_value(form) or None,
-        tempering=_tempering_value(form) or None,
         tempering_evidence=(form.get("tempering_evidence") or "").strip() or None,
         notes=(form.get("notes") or "").strip() or None,
         created_by=user.id,
         **_checklist_kwargs(form),
     )
     db.add(job)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not save the record due to a database error. Please try again.", "error")
+        return RedirectResponse("/dashboard", status_code=303)
     flash(request, f"Record for vehicle '{job.vehicle_no}' added successfully.", "success")
     return RedirectResponse("/dashboard", status_code=303)
 
@@ -178,25 +215,39 @@ async def update_job(request: Request, job_pk: int, db: Session = Depends(get_db
         flash(request, "Invalid date supplied.", "error")
         return RedirectResponse("/dashboard", status_code=303)
 
-    job.vehicle_no = vehicle_no.upper()
-    job.device_id = (form.get("device_id") or "").strip() or None
-    job.company_name = (form.get("company_name") or "").strip() or None
+    field_values = {
+        "vehicle_no": vehicle_no.upper(),
+        "device_id": (form.get("device_id") or "").strip() or None,
+        "company_name": (form.get("company_name") or "").strip() or None,
+        "location": location,
+        "po_number": (form.get("po_number") or "").strip() or None,
+        "device_type": (form.get("device_type") or "").strip() or None,
+        "service_type": _service_type_value(form) or None,
+        "tempering": _tempering_value(form) or None,
+    }
+    length_error = _validate_lengths(field_values)
+    if length_error:
+        flash(request, length_error, "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
+    for name, value in field_values.items():
+        setattr(job, name, value)
     job.job_date = parsed_date
-    job.location = location
     job.before_images = (form.get("before_images") or "").strip() or None
     job.after_images = (form.get("after_images") or "").strip() or None
     job.service_form = (form.get("service_form") or "").strip() or None
-    job.po_number = (form.get("po_number") or "").strip() or None
-    job.device_type = (form.get("device_type") or "").strip() or None
-    job.service_type = _service_type_value(form) or None
-    job.tempering = _tempering_value(form) or None
     job.tempering_evidence = (form.get("tempering_evidence") or "").strip() or None
     job.notes = (form.get("notes") or "").strip() or None
 
     for name, value in _checklist_kwargs(form).items():
         setattr(job, name, value)
 
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not save the record due to a database error. Please try again.", "error")
+        return RedirectResponse("/dashboard", status_code=303)
     flash(request, f"Record for vehicle '{job.vehicle_no}' updated successfully.", "success")
     return RedirectResponse("/dashboard", status_code=303)
 
@@ -218,6 +269,11 @@ def delete_job(request: Request, job_pk: int, db: Session = Depends(get_db)):
 
     vehicle_no = job.vehicle_no
     db.delete(job)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not delete the record due to a database error. Please try again.", "error")
+        return RedirectResponse("/dashboard", status_code=303)
     flash(request, f"Record for vehicle '{vehicle_no}' deleted.", "success")
     return RedirectResponse("/dashboard", status_code=303)

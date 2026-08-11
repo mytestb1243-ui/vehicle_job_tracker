@@ -12,6 +12,27 @@ function confirmDelete(message) {
   return window.confirm(message || "Are you sure you want to delete this? This cannot be undone.");
 }
 
+// Live "min N characters" feedback on password fields. Pairs with a
+// <p id="{input.dataset.hint}"> helper-text element next to the input.
+function validatePasswordLength(input) {
+  const minLen = parseInt(input.getAttribute("minlength"), 10) || 6;
+  const hint = document.getElementById(input.dataset.hint);
+  const len = input.value.length;
+  const tooShort = len > 0 && len < minLen;
+
+  if (tooShort) {
+    input.setCustomValidity(`Password must be at least ${minLen} characters.`);
+  } else {
+    input.setCustomValidity("");
+  }
+
+  if (!hint) return;
+  hint.textContent = tooShort
+    ? `Too short — ${len}/${minLen} characters minimum.`
+    : `Minimum ${minLen} characters.`;
+  hint.classList.toggle("helper-text-error", tooShort);
+}
+
 // Show/hide the "Inspection Type" (Tempering / Rede) sub-select depending
 // on whether "Inspection" is chosen in the Service Type dropdown.
 function toggleInspectionSub(uid) {

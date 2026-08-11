@@ -271,6 +271,14 @@ input:focus, select:focus, textarea:focus {
 .btn-danger { background: var(--error-bg); color: var(--error); }
 .btn-danger:hover { background: #f9d6d6; }
 
+.btn-clear {
+  background: #475569;
+  color: #fff;
+  border: 1px solid #334155;
+  font-weight: 600;
+}
+.btn-clear:hover { background: #334155; border-color: #1e293b; }
+
 .btn-success { background: var(--success-bg); color: var(--success); }
 .btn-success:hover { background: #d4f1e2; }
 
@@ -380,6 +388,12 @@ table.data-table tbody tr:hover { background: #fafbfd; }
   gap: 12px;
   align-items: end;
 }
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+.filter-actions .btn { flex: 1; white-space: nowrap; }
 @media (max-width: 1100px) {
   .filter-bar { grid-template-columns: repeat(2, 1fr); }
 }
@@ -616,6 +630,7 @@ table.data-table tbody tr:hover { background: #fafbfd; }
 .modal-close { float: right; cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; }
 
 .helper-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.helper-text-error { color: var(--error); font-weight: 600; }
 
 /* ---------- Checklist / multi-select grid ---------- */
 .checklist-grid {
