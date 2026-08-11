@@ -1,8 +1,9 @@
 {% macro checklist_inputs(checklist_fields, job=None, uid='') %}
 <div class="checklist-grid">
   {% for name, label in checklist_fields %}
-  <label class="checklist-item">
-    <input type="checkbox" name="{{ name }}" {{ 'checked' if job and job|attr(name) else '' }}>
+  {% set field_id = 'chk_' ~ uid ~ '_' ~ name %}
+  <label class="checklist-item" for="{{ field_id }}">
+    <input type="checkbox" id="{{ field_id }}" name="{{ name }}" {{ 'checked' if job and job|attr(name) else '' }}>
     <span>{{ label }}</span>
   </label>
   {% endfor %}
@@ -12,8 +13,9 @@
 {% macro tempering_inputs(tempering_options, selected=[], uid='') %}
 <div class="checklist-grid tempering-grid">
   {% for opt in tempering_options %}
-  <label class="checklist-item">
-    <input type="checkbox" name="tempering" value="{{ opt }}" {{ 'checked' if opt in selected else '' }}>
+  {% set field_id = 'tmp_' ~ uid ~ '_' ~ loop.index %}
+  <label class="checklist-item" for="{{ field_id }}">
+    <input type="checkbox" id="{{ field_id }}" name="tempering" value="{{ opt }}" {{ 'checked' if opt in selected else '' }}>
     <span>{{ opt }}</span>
   </label>
   {% endfor %}

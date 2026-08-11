@@ -98,7 +98,7 @@
 
       <div class="field">
         <label>Service checklist</label>
-        {{ checklist_inputs(checklist_fields) }}
+        {{ checklist_inputs(checklist_fields, None, 'new') }}
       </div>
 
       <div class="field">
@@ -284,7 +284,7 @@
                 </div>
                 <div class="field">
                   <label>Service checklist</label>
-                  {{ checklist_inputs(checklist_fields, job) }}
+                  {{ checklist_inputs(checklist_fields, job, 'edit' ~ job.id) }}
                 </div>
                 <div class="field">
                   <label>Notes</label>
