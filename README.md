@@ -31,12 +31,12 @@ This exact order is used on the **Add Record** form, the **Search** results tabl
 | **Super Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (incl. other Super Admins) |
 | **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (cannot touch Super Admin accounts) |
 | **User** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Field Support** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Field Support** | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
 | **Viewer** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 - **User** and **Field Support** can add and edit records but never see the Admin Panel link and are redirected if they try to access `/admin` directly.
 - **Viewer** can only see and search records; cannot create, edit, or delete.
-- Only **Super Admin** / **Admin** can delete records.
+- **Super Admin** / **Admin** / **Field Support** can delete records. Only Super Admin/Admin can manage users.
 - The system always protects the **last active Super Admin/Admin** — it can't be demoted, deactivated, or deleted, so you can never lock yourself out.
 - Only a **Super Admin** can create, edit, or delete another **Super Admin** account.
 
@@ -223,14 +223,15 @@ Return HTML table (view) or .xlsx file (export)
 
 **Permission Matrix**:
 - **Viewer**: Search only (no create, edit, delete)
-- **User** / **Field Support**: Create & edit own records (no delete, no admin)
+- **User**: Create & edit records (no delete, no admin)
+- **Field Support**: Create, edit & delete records (no admin)
 - **Admin**: All record operations + user management + admin panel
 - **Super Admin**: Full access, can manage other Super Admins
 
 **Enforcement Points**:
-1. Route handlers check `user.role` and `user.is_admin_level`
+1. Route handlers check `user.role` and `user.is_admin_level` / `user.can_delete_jobs`
 2. Templates conditionally show/hide UI elements (`{% if user.role != 'viewer' %}`)
-3. Delete operations require `is_admin_level` flag (admin-only)
+3. Delete operations require the `can_delete_jobs` flag (Admin-level roles + Field Support)
 4. Admin Panel access check in router: `if not user.is_admin_level: redirect /dashboard`
 
 ### Key Design Patterns

@@ -132,3 +132,6 @@ ALL_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_USER, ROLE_FIELD_SUPPORT, ROLE_V
 
 # Roles that can see the Admin Panel and manage records/users freely.
 ADMIN_LEVEL_ROLES = {ROLE_SUPER_ADMIN, ROLE_ADMIN}
+
+# Roles allowed to delete job records (Admin-level roles + Field Support).
+CAN_DELETE_JOB_ROLES = ADMIN_LEVEL_ROLES | {ROLE_FIELD_SUPPORT}

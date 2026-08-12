@@ -158,7 +158,7 @@
               {% if user.role != 'viewer' %}
               <button class="btn btn-outline btn-sm" onclick="openModal('edit-{{ job.id }}')">Edit</button>
               {% endif %}
-              {% if user.is_admin_level %}
+              {% if user.can_delete_jobs %}
               <form method="post" action="/dashboard/jobs/{{ job.id }}/delete" onsubmit="return confirmDelete('Delete record for vehicle {{ job.vehicle_no }}? This cannot be undone.')" style="display:inline;">
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
               </form>

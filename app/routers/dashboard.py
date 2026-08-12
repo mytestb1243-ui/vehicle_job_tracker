@@ -258,8 +258,8 @@ def delete_job(request: Request, job_pk: int, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    if not user.is_admin_level:
-        flash(request, "Only administrators can delete records.", "error")
+    if not user.can_delete_jobs:
+        flash(request, "You do not have permission to delete records.", "error")
         return RedirectResponse("/dashboard", status_code=303)
 
     job = db.query(Job).filter(Job.id == job_pk).first()

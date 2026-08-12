@@ -18,6 +18,7 @@ from app.choices import (
     ROLE_USER,
     ROLE_SUPER_ADMIN,
     ADMIN_LEVEL_ROLES,
+    CAN_DELETE_JOB_ROLES,
 )
 
 
@@ -47,6 +48,11 @@ class User(Base):
     @property
     def is_super_admin(self) -> bool:
         return self.role == ROLE_SUPER_ADMIN
+
+    @property
+    def can_delete_jobs(self) -> bool:
+        """Admin-level roles + Field Support may delete job records."""
+        return self.role in CAN_DELETE_JOB_ROLES
 
 
 # ---------------------------------------------------------------------------
