@@ -65,11 +65,11 @@ DEVICE_TYPE_OPTIONS = [
 # Service Type — hierarchy: New Installation / Servicing / Inspection, and
 # Inspection itself branches into Tempering / Redo.
 # ---------------------------------------------------------------------------
-SERVICE_TYPE_TOP_OPTIONS = ["New Installation", "Servicing", "Inspection", "Uninstallation"]
+SERVICE_TYPE_TOP_OPTIONS = ["New Installation", "Re-Installation", "Servicing", "Inspection", "Uninstallation"]
 SERVICE_TYPE_INSPECTION_SUBOPTIONS = ["Tempering", "Redo"]
 
 # Full flattened list of valid stored values for Service Type.
-SERVICE_TYPE_OPTIONS = ["New Installation", "Servicing", "Uninstallation"] + [
+SERVICE_TYPE_OPTIONS = ["New Installation", "Re-Installation", "Servicing", "Uninstallation"] + [
     f"Inspection - {sub}" for sub in SERVICE_TYPE_INSPECTION_SUBOPTIONS
 ]
 
