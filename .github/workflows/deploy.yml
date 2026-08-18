@@ -1,4 +1,4 @@
-name: Deploy Vehicle Job Tracker
+name: Deploy to Contabo (Docker)
 
 on:
   push:
@@ -16,8 +16,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
             cd /opt/apps/vehicle_job_tracker
             git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart vehicle-job-tracker
+            docker compose up -d --build
+            docker image prune -f --filter "label!=keep"

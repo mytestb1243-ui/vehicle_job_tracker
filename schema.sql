@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     change_sim                BOOLEAN NOT NULL DEFAULT FALSE,
     check_back_camera         BOOLEAN NOT NULL DEFAULT FALSE,
     replace_back_camera       BOOLEAN NOT NULL DEFAULT FALSE,
+    temperature_sensor        BOOLEAN NOT NULL DEFAULT FALSE,
+    probe                     BOOLEAN NOT NULL DEFAULT FALSE,
     seal_all_connections      BOOLEAN NOT NULL DEFAULT FALSE,
 
     notes                    TEXT,

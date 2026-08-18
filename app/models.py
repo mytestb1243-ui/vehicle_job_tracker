@@ -96,6 +96,8 @@ class Job(Base):
     change_sim = Column(Boolean, nullable=False, default=False)
     check_back_camera = Column(Boolean, nullable=False, default=False)
     replace_back_camera = Column(Boolean, nullable=False, default=False)
+    temperature_sensor = Column(Boolean, nullable=False, default=False)
+    probe = Column(Boolean, nullable=False, default=False)
     seal_all_connections = Column(Boolean, nullable=False, default=False)
 
     notes = Column(Text, nullable=True)

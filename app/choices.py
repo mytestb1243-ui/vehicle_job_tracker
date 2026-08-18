@@ -108,6 +108,8 @@ CHECKLIST_FIELDS = [
     ("change_sim", "Change Sim"),
     ("check_back_camera", "Check Back Camera"),
     ("replace_back_camera", "Replace Back Camera"),
+    ("temperature_sensor", "Temperature Sensor"),
+    ("probe", "Probe"),
     ("seal_all_connections", "Seal All Connections"),
 ]
 
