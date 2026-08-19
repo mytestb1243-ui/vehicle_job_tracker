@@ -137,3 +137,14 @@ ADMIN_LEVEL_ROLES = {ROLE_SUPER_ADMIN, ROLE_ADMIN}
 
 # Roles allowed to delete job records (Admin-level roles + Field Support).
 CAN_DELETE_JOB_ROLES = ADMIN_LEVEL_ROLES | {ROLE_FIELD_SUPPORT}
+
+# Default role assigned to self-registered (sign-up) accounts before an
+# admin reviews and assigns their real role at approval time.
+SIGNUP_DEFAULT_ROLE = ROLE_VIEWER
+
+# ---------------------------------------------------------------------------
+# Shared field limits — must match the VARCHAR lengths on the User model.
+# ---------------------------------------------------------------------------
+USERNAME_MAX_LEN = 80
+FULL_NAME_MAX_LEN = 150
+PASSWORD_MIN_LEN = 6

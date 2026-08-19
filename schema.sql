@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash   VARCHAR(255) NOT NULL,
     role            VARCHAR(30)  NOT NULL DEFAULT 'user',   -- super_admin | admin | user | field_support
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    is_approved     BOOLEAN      NOT NULL DEFAULT TRUE,     -- FALSE = pending admin approval (self-signup)
     created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
 
     CONSTRAINT uq_users_username UNIQUE (username)

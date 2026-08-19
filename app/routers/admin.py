@@ -6,14 +6,19 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.security import hash_password
-from app.choices import ALL_ROLES, ROLE_USER, ROLE_SUPER_ADMIN, ADMIN_LEVEL_ROLES
+from app.choices import (
+    ALL_ROLES,
+    ROLE_USER,
+    ROLE_SUPER_ADMIN,
+    ADMIN_LEVEL_ROLES,
+    USERNAME_MAX_LEN,
+    FULL_NAME_MAX_LEN,
+    PASSWORD_MIN_LEN,
+)
 from app.dependencies import get_current_user, flash, get_flashed_messages
 from app.render import templates
 
 router = APIRouter()
-
-USERNAME_MAX_LEN = 80
-FULL_NAME_MAX_LEN = 150
 
 
 def _require_admin(request: Request, db: Session):
@@ -40,13 +45,25 @@ def admin_page(request: Request, db: Session = Depends(get_db)):
     if redirect:
         return redirect
 
-    users = db.query(User).order_by(User.created_at.asc()).all()
+    pending_users = (
+        db.query(User)
+        .filter(User.is_approved == False)  # noqa: E712
+        .order_by(User.created_at.asc())
+        .all()
+    )
+    users = (
+        db.query(User)
+        .filter(User.is_approved == True)  # noqa: E712
+        .order_by(User.created_at.asc())
+        .all()
+    )
     return templates.TemplateResponse(
         request,
         "admin.html",
         {
             "user": user,
             "messages": get_flashed_messages(request),
+            "pending_users": pending_users,
             "users": users,
             "roles": ALL_ROLES,
             "active_page": "admin",
@@ -85,8 +102,8 @@ def create_user(
         flash(request, f"Full name is too long (max {FULL_NAME_MAX_LEN} characters).", "error")
         return RedirectResponse("/admin", status_code=303)
 
-    if len(password) < 6:
-        flash(request, "Password must be at least 6 characters.", "error")
+    if len(password) < PASSWORD_MIN_LEN:
+        flash(request, f"Password must be at least {PASSWORD_MIN_LEN} characters.", "error")
         return RedirectResponse("/admin", status_code=303)
 
     if role not in ALL_ROLES:
@@ -103,6 +120,7 @@ def create_user(
         password_hash=hash_password(password),
         role=role,
         is_active=True,
+        is_approved=True,
     )
     db.add(new_user)
     try:
@@ -112,6 +130,73 @@ def create_user(
         flash(request, "Could not create the user due to a database error. Please try again.", "error")
         return RedirectResponse("/admin", status_code=303)
     flash(request, f"User '{username_clean}' created successfully.", "success")
+    return RedirectResponse("/admin", status_code=303)
+
+
+@router.post("/admin/users/{user_id}/approve")
+def approve_user(
+    request: Request,
+    user_id: int,
+    role: str = Form(ROLE_USER),
+    db: Session = Depends(get_db),
+):
+    current_user, redirect = _require_admin(request, db)
+    if redirect:
+        return redirect
+
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        flash(request, "Sign-up request not found.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if target.is_approved:
+        flash(request, f"'{target.username}' is already approved.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if role == ROLE_SUPER_ADMIN and not current_user.is_super_admin:
+        flash(request, "Only a Super Admin can approve someone as another Super Admin.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if role not in ALL_ROLES:
+        role = ROLE_USER
+
+    target.role = role
+    target.is_approved = True
+    target.is_active = True
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not approve the user due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
+    flash(request, f"'{target.username}' approved as {role.replace('_', ' ').title()} and can now sign in.", "success")
+    return RedirectResponse("/admin", status_code=303)
+
+
+@router.post("/admin/users/{user_id}/reject")
+def reject_user(request: Request, user_id: int, db: Session = Depends(get_db)):
+    current_user, redirect = _require_admin(request, db)
+    if redirect:
+        return redirect
+
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        flash(request, "Sign-up request not found.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    if target.is_approved:
+        flash(request, "That user is already approved — use Delete instead of Reject.", "error")
+        return RedirectResponse("/admin", status_code=303)
+
+    username = target.username
+    db.delete(target)
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        flash(request, "Could not reject the sign-up due to a database error. Please try again.", "error")
+        return RedirectResponse("/admin", status_code=303)
+    flash(request, f"Sign-up request from '{username}' rejected.", "success")
     return RedirectResponse("/admin", status_code=303)
 
 
@@ -192,8 +277,8 @@ def reset_password(
         flash(request, "Only a Super Admin can reset another Super Admin's password.", "error")
         return RedirectResponse("/admin", status_code=303)
 
-    if not new_password or len(new_password) < 6:
-        flash(request, "Password must be at least 6 characters.", "error")
+    if not new_password or len(new_password) < PASSWORD_MIN_LEN:
+        flash(request, f"Password must be at least {PASSWORD_MIN_LEN} characters.", "error")
         return RedirectResponse("/admin", status_code=303)
 
     target.password_hash = hash_password(new_password)

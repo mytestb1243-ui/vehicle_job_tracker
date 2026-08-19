@@ -7,7 +7,62 @@
     <h1>Admin Panel</h1>
     <p>Manage user accounts, roles and access.</p>
   </div>
-  <div class="stat-pill">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    {% if pending_users %}
+    <div class="stat-pill" style="background:var(--warn-bg); color:#8a6100;">{{ pending_users|length }} pending approval{{ 's' if pending_users|length != 1 else '' }}</div>
+    {% endif %}
+    <div class="stat-pill">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">⏳ Pending Approvals</div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Requested</th>
+          <th>Assign Role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in pending_users %}
+        <tr>
+          <td class="mono">{{ u.username }}</td>
+          <td>{{ u.full_name or '—' }}</td>
+          <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <form method="post" action="/admin/users/{{ u.id }}/approve" id="approve-form-{{ u.id }}">
+              <select name="role" style="width:auto; padding:6px 8px; font-size:13px;">
+                {% for r in roles %}
+                {% if r != 'super_admin' or user.is_super_admin %}
+                <option value="{{ r }}" {{ 'selected' if r == 'user' else '' }}>{{ r | role_label }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td class="actions-cell">
+            <button type="submit" form="approve-form-{{ u.id }}" class="btn btn-success btn-sm">Approve</button>
+            <form method="post" action="/admin/users/{{ u.id }}/reject" onsubmit="return confirmDelete('Reject sign-up request from {{ u.username }}? This cannot be undone.')" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">
+          <div class="empty-state">
+            <div class="icon">✅</div>
+            No pending sign-up requests.
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="grid-2">

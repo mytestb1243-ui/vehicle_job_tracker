@@ -43,9 +43,10 @@ This exact order is used on the **Add Record** form, the **Search** results tabl
 ## 3. Features
 
 - **Sign In** — clean, centered login form with gradient background, professional UI, session-based login, bcrypt-hashed passwords.
+- **Sign Up** (`/signup`) — self-service account request form (Full Name, Username, Password). New accounts start **unapproved** and cannot sign in — an admin must approve them from the Admin Panel and assign their role first. Login attempts on a pending account show "pending administrator approval" instead of granting access.
 - **Dashboard** — add a new record with the full form (all 15 columns + hierarchical Service Type + multi-select Tempering + 15-item checklist), quick search, **View** (read-only modal), **Edit** (modal, pre-filled, hidden for Viewers), **Delete** (Admin roles only). Form is completely hidden for Viewer role users.
 - **Search** — filter by Vehicle/Device No., Company Name, Location (default: "Lahore"), Device type, Service Type (including Uninstallation), and a date range; pagination (10/25/50/100/200 rows); **Export to Excel** reproducing the exact 15-column layout — checkbox symbols (☑/☐), clickable links, and `M/D/YYYY` dates.
-- **Admin Panel** — add users (Full Name → Username → Password → Role), assign roles (Super Admin, Admin, User, Field Support, Viewer), activate/deactivate, reset passwords, delete users.
+- **Admin Panel** — **Pending Approvals** (approve a sign-up with a chosen role, or reject/delete the request), add users directly (Full Name → Username → Password → Role), assign roles (Super Admin, Admin, User, Field Support, Viewer), activate/deactivate, reset passwords, delete users.
 - Smooth top navbar, flash messages, clean professional styling matching your reference screenshots.
 
 ## 4. Prerequisites

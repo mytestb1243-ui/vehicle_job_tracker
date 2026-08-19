@@ -31,6 +31,10 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(30), nullable=False, default=ROLE_USER)
     is_active = Column(Boolean, nullable=False, default=True)
+    # Self-registered accounts start unapproved and can't log in until an
+    # admin approves them. Accounts created directly via the Admin Panel
+    # are approved immediately (see admin.py create_user).
+    is_approved = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     jobs_created = relationship("Job", back_populates="creator")

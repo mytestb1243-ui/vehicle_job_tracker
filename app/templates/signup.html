@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In · Vehicle Job Tracker</title>
+  <title>Sign Up · Vehicle Job Tracker</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <style>
     body {
@@ -14,6 +14,7 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      padding: 24px 0;
     }
 
     .login-container {
@@ -188,6 +189,31 @@
       color: #1a202c;
       letter-spacing: -0.5px;
     }
+
+    .field-hint {
+      font-size: 12px;
+      color: #a0aec0;
+      margin-top: 2px;
+    }
+    .field-hint-error,
+    .field-hint.helper-text-error {
+      color: #c53030;
+      font-weight: 600;
+    }
+
+    .approval-note {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: #ebf4ff;
+      border: 1px solid #c3dafe;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #3c4b6e;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -199,8 +225,8 @@
       </div>
 
       <div class="login-header">
-        <h1>Sign in to your account</h1>
-        <p>Manage vehicle service records with enterprise-grade precision.</p>
+        <h1>Create your account</h1>
+        <p>Request access to Vehicle Job Tracker.</p>
       </div>
 
       {% if messages %}
@@ -214,28 +240,69 @@
         </div>
       {% endif %}
 
-      <form method="post" action="/login" class="login-form">
+      <div class="approval-note">
+        <span>🔒</span>
+        <span>New accounts must be reviewed and approved by an administrator before you can sign in.</span>
+      </div>
+
+      <form method="post" action="/signup" class="login-form" id="signup-form">
+        <div class="field">
+          <label for="full_name">Full Name</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🧑</span>
+            <input type="text" id="full_name" name="full_name" placeholder="e.g. Jane Smith" required autofocus autocomplete="name">
+          </div>
+        </div>
         <div class="field">
           <label for="username">Username</label>
           <div class="input-with-icon">
             <span class="input-icon">👤</span>
-            <input type="text" id="username" name="username" placeholder="your username or email" required autofocus autocomplete="username">
+            <input type="text" id="username" name="username" placeholder="choose a username" required autocomplete="username">
           </div>
         </div>
         <div class="field">
           <label for="password">Password</label>
           <div class="input-with-icon">
             <span class="input-icon">🔒</span>
-            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+            <input type="password" id="password" name="password" placeholder="At least 6 characters" minlength="6" required
+                   autocomplete="new-password" data-hint="password-hint" oninput="validatePasswordLength(this); checkPasswordsMatch();">
           </div>
+          <p class="field-hint" id="password-hint">Minimum 6 characters.</p>
         </div>
-        <button type="submit">Sign In</button>
+        <div class="field">
+          <label for="confirm_password">Confirm Password</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required
+                   autocomplete="new-password" oninput="checkPasswordsMatch()">
+          </div>
+          <p class="field-hint" id="confirm-hint"></p>
+        </div>
+        <button type="submit">Create Account</button>
       </form>
 
       <div class="login-footer-note">
-        Don't have an account? <a href="/signup" class="login-link">Sign up</a>
+        Already have an account? <a href="/login" class="login-link">Sign in</a>
       </div>
     </div>
   </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    function checkPasswordsMatch() {
+      const pw = document.getElementById("password");
+      const confirm = document.getElementById("confirm_password");
+      const hint = document.getElementById("confirm-hint");
+      if (!confirm.value) {
+        hint.textContent = "";
+        confirm.setCustomValidity("");
+        return;
+      }
+      const mismatch = pw.value !== confirm.value;
+      hint.textContent = mismatch ? "Passwords do not match." : "Passwords match.";
+      hint.classList.toggle("field-hint-error", mismatch);
+      confirm.setCustomValidity(mismatch ? "Passwords do not match." : "");
+    }
+  </script>
 </body>
 </html>
