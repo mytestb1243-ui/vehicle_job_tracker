@@ -5,6 +5,11 @@ services:
     image: postgres:16
     container_name: vjt-db
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "5432:5432"
     env_file: .env
@@ -21,11 +26,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
     container_name: vjt-web
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file: .env
     depends_on:
       db:
@@ -34,10 +46,3 @@ services:
       - "127.0.0.1:8001:8000"
     networks:
       - vjt_net
-
-volumes:
-  vjt_pgdata:
-
-networks:
-  vjt_net:
-    name: vjt_net
