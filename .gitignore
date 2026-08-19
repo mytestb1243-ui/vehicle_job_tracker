@@ -39,6 +39,7 @@ docker-compose.override.yml
 backup_*.sql
 *.dump
 
+backups/
 # SSH keys (in case one ever ends up in this folder by accident)
 *.pem
 id_rsa
