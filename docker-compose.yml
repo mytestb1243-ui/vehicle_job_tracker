@@ -26,8 +26,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-      timeout: 5s
-      retries: 5
 
   web:
     build: .
@@ -46,3 +44,10 @@ services:
       - "127.0.0.1:8001:8000"
     networks:
       - vjt_net
+
+volumes:
+  vjt_pgdata:
+
+networks:
+  vjt_net:
+    name: vjt_net
