@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/checklist_fields.html" import company_checkboxes %}
 {% block title %}Admin Panel · {{ app_name }}{% endblock %}
 
 {% block content %}
@@ -24,7 +25,7 @@
           <th>Username</th>
           <th>Full Name</th>
           <th>Requested</th>
-          <th>Assign Role</th>
+          <th>Assign Role &amp; Companies</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -43,6 +44,7 @@
                 {% endif %}
                 {% endfor %}
               </select>
+              {{ company_checkboxes(company_options, u.company_list, compact=True) }}
             </form>
           </td>
           <td class="actions-cell">
@@ -94,6 +96,10 @@
           {% endfor %}
         </select>
       </div>
+      <div class="field">
+        <label>Companies</label>
+        {{ company_checkboxes(company_options, []) }}
+      </div>
       <button type="submit" class="btn btn-primary btn-block">Create User</button>
     </form>
   </div>
@@ -108,6 +114,7 @@
             <th>Username</th>
             <th>Full Name</th>
             <th>Role</th>
+            <th>Companies</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -118,6 +125,9 @@
             <td class="mono">{{ u.username }}</td>
             <td>{{ u.full_name or '—' }}</td>
             <td><span class="badge badge-role-{{ u.role }}">{{ u.role | role_label }}</span></td>
+            <td style="white-space:normal; max-width:220px; font-size:12.5px; color:var(--text-muted);">
+              {% if u.company_list %}{{ u.company_list | join(', ') }}{% else %}<span title="No restriction">All companies</span>{% endif %}
+            </td>
             <td>
               {% if u.is_active %}
               <span class="badge badge-active">Active</span>
@@ -156,6 +166,10 @@
                     {% endfor %}
                   </select>
                 </div>
+                <div class="field">
+                  <label>Companies</label>
+                  {{ company_checkboxes(company_options, u.company_list) }}
+                </div>
                 <div class="checkbox-row field">
                   <input type="checkbox" id="active-{{ u.id }}" name="is_active" {{ 'checked' if u.is_active else '' }}>
                   <label for="active-{{ u.id }}">Account is active</label>
@@ -182,7 +196,7 @@
             </div>
           </div>
           {% else %}
-          <tr><td colspan="5">
+          <tr><td colspan="6">
             <div class="empty-state">
               <div class="icon">👤</div>
               No users yet.

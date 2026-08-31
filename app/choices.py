@@ -49,6 +49,22 @@ COMPANY_NAME_OPTIONS = [
     "DHL PAK",
 ]
 
+COMPANY_NAME_SET = set(COMPANY_NAME_OPTIONS)
+
+
+def clean_company_list(raw) -> list:
+    """Normalise a submitted company selection down to known, de-duplicated
+    Company Name values, preserving the canonical order from
+    COMPANY_NAME_OPTIONS. Accepts a list of strings or a comma-separated
+    string. Unknown values are silently dropped."""
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        raw = raw.split(",")
+    submitted = {str(v).strip() for v in raw if str(v).strip()}
+    return [c for c in COMPANY_NAME_OPTIONS if c in submitted]
+
+
 # ---------------------------------------------------------------------------
 # Device type
 # ---------------------------------------------------------------------------

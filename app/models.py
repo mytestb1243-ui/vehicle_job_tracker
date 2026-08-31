@@ -35,9 +35,26 @@ class User(Base):
     # admin approves them. Accounts created directly via the Admin Panel
     # are approved immediately (see admin.py create_user).
     is_approved = Column(Boolean, nullable=False, default=False)
+    # Comma-separated list of Company Name values this user is restricted to.
+    # Empty / NULL  => no restriction (sees every company's records).
+    # One or more   => Dashboard + Search + Export only show those companies,
+    #                  and the user can only create/edit jobs for them.
+    companies = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     jobs_created = relationship("Job", back_populates="creator")
+
+    @property
+    def company_list(self) -> list:
+        """Assigned Company Name values, parsed from the stored string."""
+        if not self.companies:
+            return []
+        return [c.strip() for c in self.companies.split(",") if c.strip()]
+
+    @property
+    def is_company_scoped(self) -> bool:
+        """True when this user's job visibility is limited to specific companies."""
+        return bool(self.company_list)
 
     @property
     def is_admin_level(self) -> bool:

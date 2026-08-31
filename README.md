@@ -40,6 +40,12 @@ This exact order is used on the **Add Record** form, the **Search** results tabl
 - The system always protects the **last active Super Admin/Admin** — it can't be demoted, deactivated, or deleted, so you can never lock yourself out.
 - Only a **Super Admin** can create, edit, or delete another **Super Admin** account.
 
+### Company access scoping
+
+Each user can be assigned **one or more companies** in the Admin Panel (when creating a user, editing a user, or approving a sign-up). A user with companies assigned only ever sees jobs for those companies — on the Dashboard, in Search, and in the Excel export — and can only add/edit/delete records for those companies. A user with **no** companies assigned (the default) sees every company's records. Scoping applies regardless of role, so leave it unset for admins who need the full picture.
+
+Assignments are stored as a comma-separated list in `users.companies`. On an already-deployed database, add the column once with `python scripts/add_companies_column.py` (the automatic `create_all` never alters existing tables).
+
 ## 3. Features
 
 - **Sign In** — clean, centered login form with gradient background, professional UI, session-based login, bcrypt-hashed passwords.

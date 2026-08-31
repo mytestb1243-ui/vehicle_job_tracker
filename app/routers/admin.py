@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,6 +16,8 @@ from app.choices import (
     USERNAME_MAX_LEN,
     FULL_NAME_MAX_LEN,
     PASSWORD_MIN_LEN,
+    COMPANY_NAME_OPTIONS,
+    clean_company_list,
 )
 from app.dependencies import get_current_user, flash, get_flashed_messages
 from app.render import templates
@@ -29,6 +33,11 @@ def _require_admin(request: Request, db: Session):
         flash(request, "You do not have permission to access the admin panel.", "error")
         return None, RedirectResponse("/dashboard", status_code=303)
     return user, None
+
+
+def _companies_str(raw) -> str:
+    """Comma-separated string of valid Company Names, ready to store."""
+    return ", ".join(clean_company_list(raw))
 
 
 def _active_admin_level_count(db: Session) -> int:
@@ -66,6 +75,7 @@ def admin_page(request: Request, db: Session = Depends(get_db)):
             "pending_users": pending_users,
             "users": users,
             "roles": ALL_ROLES,
+            "company_options": COMPANY_NAME_OPTIONS,
             "active_page": "admin",
         },
     )
@@ -78,6 +88,7 @@ def create_user(
     full_name: str = Form(""),
     password: str = Form(...),
     role: str = Form(ROLE_USER),
+    companies: List[str] = Form(default=[]),
     db: Session = Depends(get_db),
 ):
     current_user, redirect = _require_admin(request, db)
@@ -121,6 +132,7 @@ def create_user(
         role=role,
         is_active=True,
         is_approved=True,
+        companies=_companies_str(companies) or None,
     )
     db.add(new_user)
     try:
@@ -138,6 +150,7 @@ def approve_user(
     request: Request,
     user_id: int,
     role: str = Form(ROLE_USER),
+    companies: List[str] = Form(default=[]),
     db: Session = Depends(get_db),
 ):
     current_user, redirect = _require_admin(request, db)
@@ -163,6 +176,7 @@ def approve_user(
     target.role = role
     target.is_approved = True
     target.is_active = True
+    target.companies = _companies_str(companies) or None
     try:
         db.commit()
     except SQLAlchemyError:
@@ -207,6 +221,7 @@ def update_user(
     full_name: str = Form(""),
     role: str = Form(ROLE_USER),
     is_active: str = Form("on"),
+    companies: List[str] = Form(default=[]),
     db: Session = Depends(get_db),
 ):
     current_user, redirect = _require_admin(request, db)
@@ -247,6 +262,7 @@ def update_user(
     target.full_name = full_name_clean
     target.role = role
     target.is_active = is_active == "on"
+    target.companies = _companies_str(companies) or None
     try:
         db.commit()
     except SQLAlchemyError:

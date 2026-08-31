@@ -29,6 +29,14 @@ CHECKED = "\u2611"    # ☑
 UNCHECKED = "\u2610"  # ☐
 
 
+def _scope_to_user_companies(query, user):
+    """Limit a Job query to a company-scoped user's assigned companies.
+    Unscoped users get the query back unchanged."""
+    if user.is_company_scoped:
+        query = query.filter(Job.company_name.in_(user.company_list))
+    return query
+
+
 def _apply_filters(query, vehicle_or_device, company_name, location, device_type,
                     service_type, date_from, date_to):
     if vehicle_or_device:
@@ -81,7 +89,7 @@ def search_page(
         page_size = 10
     page = max(page, 1)
 
-    query = db.query(Job)
+    query = _scope_to_user_companies(db.query(Job), user)
     query = _apply_filters(
         query, vehicle_or_device, company_name, location, device_type,
         service_type, date_from, date_to,
@@ -119,7 +127,7 @@ def search_page(
             "page_sizes": ALLOWED_PAGE_SIZES,
             "total_pages": total_pages,
             "device_types": DEVICE_TYPE_OPTIONS,
-            "company_names": COMPANY_NAME_OPTIONS,
+            "company_names": user.company_list if user.is_company_scoped else COMPANY_NAME_OPTIONS,
             "service_types": SERVICE_TYPE_OPTIONS,
             "checklist_fields": CHECKLIST_FIELDS,
             "filters_qs": filters_qs,
@@ -151,7 +159,7 @@ def export_excel(
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    query = db.query(Job)
+    query = _scope_to_user_companies(db.query(Job), user)
     query = _apply_filters(
         query, vehicle_or_device, company_name, location, device_type,
         service_type, date_from, date_to,

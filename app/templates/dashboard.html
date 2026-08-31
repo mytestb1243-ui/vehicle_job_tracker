@@ -32,7 +32,7 @@
       <div class="field-row">
         <div class="field">
           <label for="company_name">Company Name</label>
-          <select id="company_name" name="company_name">
+          <select id="company_name" name="company_name" {{ 'required' if company_required else '' }}>
             <option value="">Select company</option>
             {% for c in company_names %}
             <option value="{{ c }}">{{ c }}</option>
@@ -225,7 +225,7 @@
                 <div class="field-row">
                   <div class="field">
                     <label>Company Name</label>
-                    <select name="company_name">
+                    <select name="company_name" {{ 'required' if company_required else '' }}>
                       <option value="">Select company</option>
                       {% for c in company_names %}
                       <option value="{{ c }}" {{ 'selected' if c == job.company_name else '' }}>{{ c }}</option>

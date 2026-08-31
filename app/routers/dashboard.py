@@ -81,13 +81,38 @@ def _selected_list(raw: str):
     return [v.strip() for v in raw.split(",") if v.strip()]
 
 
+def _scope_to_user_companies(query, user):
+    """Limit a Job query to the companies assigned to a company-scoped user.
+    Unscoped users (no companies assigned) get the query back unchanged."""
+    if user.is_company_scoped:
+        query = query.filter(Job.company_name.in_(user.company_list))
+    return query
+
+
+def _allowed_company_names(user):
+    """Company Name options this user may pick from on the Add/Edit form."""
+    return user.company_list if user.is_company_scoped else COMPANY_NAME_OPTIONS
+
+
+def _validate_company_scope(user, company_name):
+    """For a company-scoped user, a saved record must belong to one of their
+    assigned companies. Returns an error message, or None if OK."""
+    if not user.is_company_scoped:
+        return None
+    if not company_name:
+        return "Select a Company Name — your account is limited to specific companies."
+    if company_name not in user.company_list:
+        return "You can only save records for the companies assigned to your account."
+    return None
+
+
 @router.get("/dashboard")
 async def dashboard_page(request: Request, q: str = "", db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    query = db.query(Job)
+    query = _scope_to_user_companies(db.query(Job), user)
     if q:
         like = f"%{q.strip()}%"
         query = query.filter(
@@ -98,7 +123,7 @@ async def dashboard_page(request: Request, q: str = "", db: Session = Depends(ge
             )
         )
     recent_jobs = query.order_by(Job.created_at.desc()).limit(20).all()
-    total_jobs = db.query(Job).count()
+    total_jobs = _scope_to_user_companies(db.query(Job), user).count()
 
     return templates.TemplateResponse(
         request,
@@ -110,7 +135,8 @@ async def dashboard_page(request: Request, q: str = "", db: Session = Depends(ge
             "total_jobs": total_jobs,
             "checklist_fields": CHECKLIST_FIELDS,
             "device_types": DEVICE_TYPE_OPTIONS,
-            "company_names": COMPANY_NAME_OPTIONS,
+            "company_names": _allowed_company_names(user),
+            "company_required": user.is_company_scoped,
             "service_type_top_options": SERVICE_TYPE_TOP_OPTIONS,
             "service_type_sub_options": SERVICE_TYPE_INSPECTION_SUBOPTIONS,
             "tempering_options": TEMPERING_OPTIONS,
@@ -162,6 +188,11 @@ async def create_job(request: Request, db: Session = Depends(get_db)):
         flash(request, length_error, "error")
         return RedirectResponse("/dashboard", status_code=303)
 
+    company_error = _validate_company_scope(user, field_values["company_name"])
+    if company_error:
+        flash(request, company_error, "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
     job = Job(
         **field_values,
         job_date=parsed_date,
@@ -199,6 +230,10 @@ async def update_job(request: Request, job_pk: int, db: Session = Depends(get_db
         flash(request, "Record not found.", "error")
         return RedirectResponse("/dashboard", status_code=303)
 
+    if user.is_company_scoped and job.company_name not in user.company_list:
+        flash(request, "You do not have access to that record.", "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
     form = await request.form()
 
     vehicle_no = (form.get("vehicle_no") or "").strip()
@@ -228,6 +263,11 @@ async def update_job(request: Request, job_pk: int, db: Session = Depends(get_db
     length_error = _validate_lengths(field_values)
     if length_error:
         flash(request, length_error, "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
+    company_error = _validate_company_scope(user, field_values["company_name"])
+    if company_error:
+        flash(request, company_error, "error")
         return RedirectResponse("/dashboard", status_code=303)
 
     for name, value in field_values.items():
@@ -265,6 +305,10 @@ def delete_job(request: Request, job_pk: int, db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.id == job_pk).first()
     if not job:
         flash(request, "Record not found.", "error")
+        return RedirectResponse("/dashboard", status_code=303)
+
+    if user.is_company_scoped and job.company_name not in user.company_list:
+        flash(request, "You do not have access to that record.", "error")
         return RedirectResponse("/dashboard", status_code=303)
 
     vehicle_no = job.vehicle_no

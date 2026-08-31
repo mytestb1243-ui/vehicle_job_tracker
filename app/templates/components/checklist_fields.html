@@ -22,6 +22,18 @@
 </div>
 {% endmacro %}
 
+{% macro company_checkboxes(company_options, selected=[], compact=False) %}
+<div class="checklist-grid company-grid{{ ' company-grid--compact' if compact else '' }}">
+  {% for c in company_options %}
+  <label class="checklist-item">
+    <input type="checkbox" name="companies" value="{{ c }}" {{ 'checked' if c in selected else '' }}>
+    <span>{{ c }}</span>
+  </label>
+  {% endfor %}
+</div>
+<p class="helper-text">Leave all unchecked to give this user access to every company's records.</p>
+{% endmacro %}
+
 {% macro service_type_select(top_options, sub_options, uid, selected_top='', selected_sub='') %}
 <div class="field-row service-type-row">
   <div class="field">

@@ -651,6 +651,24 @@ table.data-table tbody tr:hover { background: #fafbfd; }
   .tempering-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Company assignment picker (Admin Panel) */
+.company-grid {
+  grid-template-columns: repeat(2, 1fr);
+  white-space: normal;
+}
+.company-grid--compact {
+  grid-template-columns: 1fr;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+.company-grid--compact .checklist-item { font-size: 12.5px; }
+@media (max-width: 700px) {
+  .company-grid { grid-template-columns: 1fr; }
+}
+
 .checklist-item {
   display: flex;
   align-items: center;

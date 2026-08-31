@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     role            VARCHAR(30)  NOT NULL DEFAULT 'user',   -- super_admin | admin | user | field_support
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
     is_approved     BOOLEAN      NOT NULL DEFAULT TRUE,     -- FALSE = pending admin approval (self-signup)
+    companies       TEXT,                                   -- comma-separated Company Name list; NULL/'' = access to all companies
     created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
 
     CONSTRAINT uq_users_username UNIQUE (username)
