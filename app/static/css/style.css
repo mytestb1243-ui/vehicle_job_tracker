@@ -337,6 +337,12 @@ table.data-table tbody tr:hover { background: #fafbfd; }
 
 .mono { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; color: var(--primary-dark); font-weight: 600; }
 
+/* Search results: show the full Notes text on a single line */
+table.data-table td.notes-cell {
+  min-width: 420px;
+  white-space: nowrap;
+}
+
 .badge {
   display: inline-block;
   padding: 3px 10px;

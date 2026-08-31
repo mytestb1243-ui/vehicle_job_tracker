@@ -122,7 +122,7 @@
               {{ job.checklist_done_count }}/{{ checklist_fields|length }} ✓
             </button>
           </td>
-          <td>{{ (job.notes[:40] + '…') if job.notes and job.notes|length > 40 else (job.notes or '—') }}</td>
+          <td class="notes-cell">{{ job.notes or '—' }}</td>
         </tr>
 
         <div class="modal-backdrop" id="view-{{ job.id }}">
