@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up · Vehicle Job Tracker</title>
+  <title>Sign Up · {{ app_name }}</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <style>
     body {
@@ -221,12 +221,12 @@
     <div class="login-card">
       <div class="login-branding">
         <span class="login-branding-icon">🚛</span>
-        <span class="login-branding-text">Vehicle Job Tracker</span>
+        <span class="login-branding-text">{{ app_name }}</span>
       </div>
 
       <div class="login-header">
         <h1>Create your account</h1>
-        <p>Request access to Vehicle Job Tracker.</p>
+        <p>Request access to {{ app_name }}.</p>
       </div>
 
       {% if messages %}

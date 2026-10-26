@@ -1,0 +1,3 @@
+staging-server-ip=62.171.158.64
+user=root
+password: dWAh0xdI4KnUr1e8858O

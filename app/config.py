@@ -11,7 +11,7 @@ class Settings:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "insecure-dev-secret-change-me")
     SESSION_MAX_AGE: int = int(os.getenv("SESSION_MAX_AGE", "28800"))
 
-    APP_NAME: str = os.getenv("APP_NAME", "Vehicle Job Tracker")
+    APP_NAME: str = os.getenv("APP_NAME", "Vehicle Job Tracker Testing")
 
     DEFAULT_ADMIN_USERNAME: str = os.getenv("DEFAULT_ADMIN_USERNAME", "admin")
     DEFAULT_ADMIN_PASSWORD: str = os.getenv("DEFAULT_ADMIN_PASSWORD", "change-this-password")
