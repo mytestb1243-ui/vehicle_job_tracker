@@ -81,7 +81,7 @@ cp .env.example .env
 ```
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jobtrack
 SECRET_KEY=replace-with-a-long-random-string
-APP_NAME=Vehicle Job Tracker Testing
+APP_NAME=Vehicle Job Tracker Staging
 DEFAULT_ADMIN_USERNAME=admin
 DEFAULT_ADMIN_PASSWORD=Admin@123
 DEFAULT_ADMIN_FULLNAME=System Administrator
