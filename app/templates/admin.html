@@ -10,7 +10,7 @@
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
     {% if pending_users %}
-    <div class="stat-pill" style="background:var(--warn-bg); color:#8a6100;">{{ pending_users|length }} pending approval{{ 's' if pending_users|length != 1 else '' }}</div>
+    <div class="stat-pill" style="background:var(--warn-bg); color:var(--accent);">{{ pending_users|length }} pending approval{{ 's' if pending_users|length != 1 else '' }}</div>
     {% endif %}
     <div class="stat-pill">{{ users|length }} user{{ 's' if users|length != 1 else '' }}</div>
   </div>
