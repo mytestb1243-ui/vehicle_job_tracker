@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     replace_dsm               BOOLEAN NOT NULL DEFAULT FALSE,
     replace_device            BOOLEAN NOT NULL DEFAULT FALSE,
     change_sim                BOOLEAN NOT NULL DEFAULT FALSE,
+    replace_sim               BOOLEAN NOT NULL DEFAULT FALSE,
     check_back_camera         BOOLEAN NOT NULL DEFAULT FALSE,
     replace_back_camera       BOOLEAN NOT NULL DEFAULT FALSE,
     temperature_sensor        BOOLEAN NOT NULL DEFAULT FALSE,

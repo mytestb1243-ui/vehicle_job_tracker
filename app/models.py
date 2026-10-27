@@ -115,6 +115,7 @@ class Job(Base):
     replace_dsm = Column(Boolean, nullable=False, default=False)
     replace_device = Column(Boolean, nullable=False, default=False)
     change_sim = Column(Boolean, nullable=False, default=False)
+    replace_sim = Column(Boolean, nullable=False, default=False)
     check_back_camera = Column(Boolean, nullable=False, default=False)
     replace_back_camera = Column(Boolean, nullable=False, default=False)
     temperature_sensor = Column(Boolean, nullable=False, default=False)
