@@ -54,6 +54,7 @@ Assignments are stored as a comma-separated list in `users.companies`. On an alr
 - **Search** — filter by Vehicle/Device No., Company Name, Location (default: "Lahore"), Device type, Service Type (including Uninstallation), and a date range; pagination (10/25/50/100/200 rows); **Export to Excel** reproducing the exact 15-column layout — checkbox symbols (☑/☐), clickable links, and `M/D/YYYY` dates.
 - **Admin Panel** — **Pending Approvals** (approve a sign-up with a chosen role, or reject/delete the request), add users directly (Full Name → Username → Password → Role), assign roles (Super Admin, Admin, User, Field Support, Viewer), activate/deactivate, reset passwords, delete users.
 - Smooth top navbar, flash messages, clean professional styling matching your reference screenshots.
+- **REST API** (`/api/v1`) for external systems — create/list/update users, list jobs (id, location, date, creator) and change a job's location. Authenticated with per-client API keys (`scripts/manage_api_keys.py`). Interactive docs at `/api/v1/docs`; full guide in [`docs/API.md`](docs/API.md).
 
 ## 4. Prerequisites
 

@@ -135,3 +135,20 @@ class Job(Base):
     @property
     def checklist_done_count(self) -> int:
         return sum(1 for name, _label in CHECKLIST_FIELDS if getattr(self, name))
+
+
+# ---------------------------------------------------------------------------
+# ApiKey — credential for an external client of the /api/v1 REST API.
+# Only the SHA-256 hash of the key is stored; the plain key is shown once
+# when it is issued (scripts/manage_api_keys.py) and can't be recovered.
+# ---------------------------------------------------------------------------
+class ApiKey(Base):
+    __tablename__ = "api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)          # who the key was issued to
+    key_prefix = Column(String(16), nullable=False)     # first chars, for identifying a key in logs
+    key_hash = Column(String(64), unique=True, index=True, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_used_at = Column(DateTime, nullable=True)

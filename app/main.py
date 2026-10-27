@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 
+from app.api import api_v1
 from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -24,6 +25,9 @@ app.include_router(auth.router, tags=["auth"])
 app.include_router(dashboard.router, tags=["dashboard"])
 app.include_router(search.router, tags=["search"])
 app.include_router(admin.router, tags=["admin"])
+
+# External REST API (API-key auth). Docs at /api/v1/docs — see docs/API.md.
+app.mount("/api/v1", api_v1)
 
 
 @app.get("/")
