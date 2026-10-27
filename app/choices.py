@@ -122,6 +122,7 @@ CHECKLIST_FIELDS = [
     ("replace_dsm", "Replace DSM"),
     ("replace_device", "Replace Device"),
     ("change_sim", "Change Sim"),
+    ("replace_sim", "Replace Sim"),
     ("check_back_camera", "Check Back Camera"),
     ("replace_back_camera", "Replace Back Camera"),
     ("temperature_sensor", "Temperature Sensor"),
