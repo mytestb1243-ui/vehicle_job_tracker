@@ -46,3 +46,7 @@ id_rsa
 id_rsa.pub
 gh_actions_key
 gh_actions_key.pub
+
+# server configuration and secrets
+server_info.txt
+
